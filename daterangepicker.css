@@ -88,6 +88,14 @@
   border-top: 6px solid #fff;
 }
 
+.daterangepicker.always-open {
+  display: block !important;
+}
+
+.daterangepicker.always-render {
+  
+}
+
 .daterangepicker.single .daterangepicker .ranges, .daterangepicker.single .drp-calendar {
   float: none;
 }
@@ -95,6 +103,8 @@
 .daterangepicker.single .drp-selected {
   display: none;
 }
+
+
 
 .daterangepicker.show-calendar .drp-calendar {
   display: block;
