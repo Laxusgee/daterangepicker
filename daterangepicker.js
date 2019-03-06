@@ -56,6 +56,10 @@
         this.alwaysShowCalendars = false;
         this.ranges = {};
 
+        
+        this.alwaysOpen = false; //force calender to always show
+        this.alwaysRenderCalendars = false; //if you want single calender to always render left and right
+
         this.opens = 'right';
         if (this.element.hasClass('pull-right'))
             this.opens = 'left';
@@ -278,6 +282,12 @@
         if (typeof options.alwaysShowCalendars === 'boolean')
             this.alwaysShowCalendars = options.alwaysShowCalendars;
 
+        if (typeof options.alwaysOpen === 'boolean')
+            this.alwaysOpen = options.alwaysOpen;
+
+        if (typeof options.alwaysRenderCalendars === 'boolean')
+            this.alwaysRenderCalendars = options.alwaysRenderCalendars;
+
         // update day names order to firstDay
         if (this.locale.firstDay != 0) {
             var iterator = this.locale.firstDay;
@@ -385,14 +395,24 @@
             this.container.addClass('single');
             this.container.find('.drp-calendar.left').addClass('single');
             this.container.find('.drp-calendar.left').show();
-            this.container.find('.drp-calendar.right').hide();
-            if (!this.timePicker) {
+
+            if(this.alwaysRenderCalendars)
+                this.container.addClass('always-render');
+
+            if(!this.alwaysRenderCalendars)
+                this.container.find('.drp-calendar.right').hide();
+
+            if (!this.timePicker && (!this.alwaysRenderCalendars || this.autoApply)) {
                 this.container.addClass('auto-apply');
             }
         }
 
         if ((typeof options.ranges === 'undefined' && !this.singleDatePicker) || this.alwaysShowCalendars) {
             this.container.addClass('show-calendar');
+        }
+
+        if (this.alwaysOpen) {
+            this.container.addClass('always-open');
         }
 
         this.container.addClass('opens' + this.opens);
@@ -475,7 +495,7 @@
                     this.startDate.minute(Math.floor(this.startDate.minute() / this.timePickerIncrement) * this.timePickerIncrement);
             }
 
-            if (!this.isShowing)
+            if (!this.isShowing && !this.alwaysOpen)
                 this.updateElement();
 
             this.updateMonthsInView();
@@ -507,7 +527,7 @@
 
             this.container.find('.drp-selected').html(this.startDate.format(this.locale.format) + this.locale.separator + this.endDate.format(this.locale.format));
 
-            if (!this.isShowing)
+            if (!this.isShowing && !this.alwaysOpen)
                 this.updateElement();
 
             this.updateMonthsInView();
@@ -734,7 +754,7 @@
             }
 
             html += '<th colspan="5" class="month">' + dateHtml + '</th>';
-            if ((!maxDate || maxDate.isAfter(calendar.lastDay)) && (!this.linkedCalendars || side == 'right' || this.singleDatePicker)) {
+            if ((!maxDate || maxDate.isAfter(calendar.lastDay)) && (!this.linkedCalendars || side == 'right' || (this.singleDatePicker && !this.alwaysRenderCalendars) )) {
                 html += '<th class="next available"><span></span></th>';
             } else {
                 html += '<th></th>';
@@ -1104,7 +1124,8 @@
         },
 
         hide: function(e) {
-            if (!this.isShowing) return;
+
+            if (!this.isShowing && !this.alwaysOpen) return;
 
             //incomplete date selection, revert to last values
             if (!this.endDate) {
@@ -1121,6 +1142,10 @@
 
             $(document).off('.daterangepicker');
             $(window).off('.daterangepicker');
+
+            $(document).off('.daterangepicker-inline');
+            $(window).off('.daterangepicker-inline');
+
             this.container.hide();
             this.element.trigger('hide.daterangepicker', this);
             this.isShowing = false;
@@ -1305,7 +1330,7 @@
 
             if (this.singleDatePicker) {
                 this.setEndDate(this.startDate);
-                if (!this.timePicker)
+                if (!this.timePicker && (!this.alwaysRenderCalendars || this.autoApply))
                     this.clickApply();
             }
 
@@ -1349,6 +1374,7 @@
         },
 
         clickApply: function(e) {
+
             this.hide();
             this.element.trigger('apply.daterangepicker', this);
         },
@@ -1447,7 +1473,6 @@
             //re-render the time pickers because changing one selection can affect what's enabled in another
             this.renderTimePicker('left');
             this.renderTimePicker('right');
-
         },
 
         elementChanged: function() {
@@ -1494,7 +1519,8 @@
             if (this.element.is('input') && this.autoUpdateInput) {
                 var newValue = this.startDate.format(this.locale.format);
                 if (!this.singleDatePicker) {
-                    newValue += this.locale.separator + this.endDate.format(this.locale.format);
+                    if(this.endDate)
+                        newValue += this.locale.separator + this.endDate.format(this.locale.format);
                 }
                 if (newValue !== this.element.val()) {
                     this.element.val(newValue).trigger('change');
