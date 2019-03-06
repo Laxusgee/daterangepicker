@@ -457,7 +457,12 @@
             this.element.on('click.daterangepicker', $.proxy(this.toggle, this));
             this.element.on('keydown.daterangepicker', $.proxy(this.toggle, this));
         }
-
+        
+        //
+        // if always open, show now
+        //
+        if(this.alwaysOpen)
+            this.show();
         //
         // if attached to a text input, set the initial value
         //
